@@ -1,14 +1,105 @@
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Mail, Lock } from "lucide-react";
-import { useState } from "react";
+import { Shield, Mail, Lock, LogOut, Users, UserPlus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import AdminDashboard from "@/components/AdminDashboard";
 
 const Admin = () => {
+  const { user, role, loading, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (error) throw error;
+        toast.success("註冊成功！請查看電郵驗證你的帳戶。");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast.success("登入成功！");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "操作失敗");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    const { error } = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin + "/admin",
+    });
+    if (error) toast.error("Google 登入失敗");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container py-10 flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <p className="text-muted-foreground">載入中...</p>
+        </main>
+      </div>
+    );
+  }
+
+  // Logged in
+  if (user) {
+    const isAdmin = role === "super_admin" || role === "admin";
+
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container py-10">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="font-display text-2xl text-accent">管理後台</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                {user.email} · 角色：
+                <span className="text-primary font-medium">
+                  {role === "super_admin" ? "超級管理員" : role === "admin" ? "管理員" : "一般用戶"}
+                </span>
+              </p>
+            </div>
+            <Button variant="outline" onClick={signOut} className="border-border text-foreground hover:bg-muted">
+              <LogOut className="mr-2 h-4 w-4" />
+              登出
+            </Button>
+          </div>
+
+          {isAdmin ? (
+            <AdminDashboard role={role!} />
+          ) : (
+            <div className="text-center py-20">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                <Shield className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="font-display text-xl text-foreground mb-2">請等待 ADMIN 批準</h2>
+              <p className="text-muted-foreground text-sm">你的帳戶尚未獲得管理員權限，請聯絡超級管理員。</p>
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  // Not logged in - show login/signup form
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -18,13 +109,15 @@ const Admin = () => {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 glow-red">
               <Shield className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="font-display text-2xl text-accent">管理員登入</h1>
+            <h1 className="font-display text-2xl text-accent">
+              {isSignUp ? "申請會員" : "管理員登入"}
+            </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              使用你的電郵登入管理後台
+              {isSignUp ? "建立你的帳戶" : "使用你的電郵登入管理後台"}
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6 space-y-5">
+          <form onSubmit={handleEmailAuth} className="rounded-xl border border-border bg-card p-6 space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground">電郵地址</Label>
               <div className="relative">
@@ -36,6 +129,7 @@ const Admin = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 bg-muted border-border"
+                  required
                 />
               </div>
             </div>
@@ -51,15 +145,21 @@ const Admin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 bg-muted border-border"
+                  required
+                  minLength={6}
                 />
               </div>
             </div>
 
             <Button
+              type="submit"
+              disabled={submitting}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
               size="lg"
             >
-              登入
+              {submitting ? "處理中..." : isSignUp ? (
+                <><UserPlus className="mr-2 h-4 w-4" />註冊</>
+              ) : "登入"}
             </Button>
 
             <div className="relative">
@@ -72,9 +172,11 @@ const Admin = () => {
             </div>
 
             <Button
+              type="button"
               variant="outline"
               className="w-full border-border text-foreground hover:bg-muted"
               size="lg"
+              onClick={handleGoogleLogin}
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -84,9 +186,17 @@ const Admin = () => {
               </svg>
               使用 Google 登入
             </Button>
-          </div>
+          </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            {isSignUp ? (
+              <>已有帳戶？<button onClick={() => setIsSignUp(false)} className="text-primary hover:underline">登入</button></>
+            ) : (
+              <>未有帳戶？<button onClick={() => setIsSignUp(true)} className="text-primary hover:underline">申請會員</button></>
+            )}
+          </p>
+
+          <p className="mt-2 text-center text-xs text-muted-foreground">
             只有獲授權的管理員才可存取後台功能
           </p>
         </div>
