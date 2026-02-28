@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PTCG HUB — 寶可夢卡牌資訊平台</title>
+<meta name="description" content="PTCG HUB 每日寶可夢卡牌新聞、熱門炒價、福袋搶購、買卡專區">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#121520;--bg2:#1a1e2e;--card:#1e2235;--border:#2a2f45;
+  --fg:#fdf8e8;--muted:#6b7194;--accent:#ffc107;--primary:#e04848;
+  --green:#4ade80;--red:#ef4444;--blue:#5b6abf;
+}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;min-height:100vh}
+h1,h2,h3,h4,h5,h6,.font-display{font-family:'Russo One',sans-serif}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+/* NAV */
+.navbar{position:sticky;top:0;z-index:50;background:rgba(18,21,32,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.navbar-inner{max-width:1200px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{display:flex;align-items:center;gap:.5rem;cursor:pointer}
+.logo-box{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Russo One';font-size:13px;color:#fff}
+.logo-text{font-family:'Russo One';font-size:1.1rem;color:var(--accent)}
+.nav-links{display:flex;gap:4px}
+.nav-link{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.nav-link:hover{background:var(--bg2);color:var(--fg)}
+.nav-link.active{background:rgba(224,72,72,.12);color:var(--primary)}
+.nav-link svg{width:16px;height:16px}
+
+/* PAGE */
+.page{display:none}
+.page.active{display:block}
+.container{max-width:1200px;margin:0 auto;padding:2.5rem 1.5rem}
+
+/* HERO */
+.hero{position:relative;height:240px;overflow:hidden;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;text-align:center}
+.hero h1{font-size:2.5rem;color:var(--accent);text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.hero p{margin-top:.5rem;color:var(--muted);font-size:.95rem}
+
+/* GRID */
+.grid-3{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.grid-4{display:grid;gap:1.25rem;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+
+/* NEWS CARD */
+.news-card{border:1px solid var(--border);border-radius:12px;background:var(--card);overflow:hidden;transition:border-color .3s,box-shadow .3s}
+.news-card:hover{border-color:rgba(224,72,72,.4);box-shadow:0 0 20px rgba(224,72,72,.15)}
+.news-card .img-wrap{aspect-ratio:16/10;overflow:hidden;background:var(--bg2);display:flex;align-items:center;justify-content:center}
+.news-card .img-wrap img{height:100%;object-fit:contain;transition:transform .5s}
+.news-card:hover .img-wrap img{transform:scale(1.05)}
+.news-card .body{padding:1.25rem}
+.news-card .meta{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.badge-primary{background:rgba(224,72,72,.15);color:var(--primary)}
+.badge-accent{border:1px solid rgba(255,193,7,.3);color:var(--accent);background:transparent}
+.badge-muted{border:1px solid rgba(107,113,148,.3);color:var(--muted);background:transparent}
+.date-text{font-size:12px;color:var(--muted)}
+.news-card h2{font-family:'Russo One';font-size:15px;line-height:1.4;color:var(--fg)}
+.news-card p{margin-top:.5rem;font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* TABLE */
+.table-wrap{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(42,47,69,.5);border-bottom:1px solid var(--border)}
+th{padding:12px 16px;text-align:left;font-size:13px;font-weight:500;color:var(--muted)}
+th.right,td.right{text-align:right}
+tbody tr{border-bottom:1px solid rgba(42,47,69,.5);transition:background .2s}
+tbody tr:hover{background:rgba(42,47,69,.3)}
+td{padding:12px 16px}
+.card-cell{display:flex;align-items:center;gap:12px}
+.card-cell img{width:48px;height:64px;object-fit:contain;border-radius:6px;background:var(--bg2)}
+.card-cell .name{font-weight:500}
+.card-cell .sub{font-size:12px;color:var(--muted)}
+.price-text{font-family:'Russo One';font-size:1.05rem}
+.change-up{color:var(--green);font-weight:500;font-size:14px}
+.change-down{color:var(--red);font-weight:500;font-size:14px}
+.mono{font-family:monospace;font-size:13px;color:var(--muted)}
+
+/* LUCKY BAG */
+.lucky-center{max-width:800px;margin:0 auto}
+.lucky-grid{display:grid;gap:2.5rem;grid-template-columns:1fr 1fr;align-items:center}
+.lucky-img-wrap{position:relative;display:flex;align-items:center;justify-content:center;padding:2rem}
+.lucky-img-wrap::before{content:'';position:absolute;inset:0;border-radius:24px;background:rgba(224,72,72,.06);filter:blur(40px)}
+.lucky-img{position:relative;z-index:1;width:280px;animation:floaty 3s ease-in-out infinite;filter:drop-shadow(0 20px 40px rgba(0,0,0,.4))}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.lucky-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(224,72,72,.12);color:var(--primary);padding:6px 16px;border-radius:999px;font-size:13px;margin-bottom:1rem}
+.lucky-info h1{font-family:'Russo One';font-size:1.6rem;color:var(--accent);margin-bottom:1rem}
+.lucky-info>p{color:var(--muted);line-height:1.7;margin-bottom:1.5rem;font-size:.95rem}
+.info-box{border:1px solid var(--border);border-radius:12px;background:var(--card);padding:1.25rem;margin-bottom:1.5rem}
+.info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.info-row:last-child{margin-bottom:0}
+.info-label{color:var(--muted);font-size:.9rem}
+.info-value{font-family:'Russo One';font-size:1.3rem;color:var(--accent)}
+.progress-bar{width:100%;height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin-top:.5rem}
+.progress-fill{height:100%;background:var(--primary);border-radius:99px;transition:width .5s}
+.progress-text{text-align:right;font-size:11px;color:var(--muted);margin-top:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:12px 24px;border-radius:10px;border:none;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Noto Sans TC',sans-serif}
+.btn-primary{background:var(--primary);color:#fff;width:100%;box-shadow:0 0 20px rgba(224,72,72,.3)}
+.btn-primary:hover{background:#c93c3c}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-outline{background:transparent;border:1px solid rgba(224,72,72,.3);color:var(--primary)}
+.btn-outline:hover{background:var(--primary);color:#fff}
+.btn-sm{padding:6px 14px;font-size:13px;border-radius:8px}
+
+/* BUY CARDS */
+.sale-card{border:1px solid var(--border);border-radius:12px;background:var(--card);overflow:hidden;transition:border-color .3s}
+.sale-card:hover{border-color:rgba(255,193,7,.3)}
+.sale-card .img-area{aspect-ratio:3/4;background:var(--bg2);display:flex;align-items:center;justify-content:center;padding:1rem;overflow:hidden}
+.sale-card .img-area img{height:100%;object-fit:contain;transition:transform .5s}
+.sale-card:hover .img-area img{transform:scale(1.05)}
+.sale-card .info{padding:1rem}
+.sale-card .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sale-card .card-name{font-weight:500;font-size:14px}
+.sale-card .card-num{font-family:monospace;font-size:12px;color:var(--muted)}
+.sale-card .seller{font-size:12px;color:var(--muted);margin-bottom:.75rem}
+.sale-card .bottom-row{display:flex;justify-content:space-between;align-items:center}
+.sale-card .price{font-family:'Russo One';font-size:1.1rem;color:var(--accent)}
+
+/* ADMIN */
+.admin-center{max-width:420px;margin:0 auto;padding-top:4rem}
+.admin-icon{width:64px;height:64px;border-radius:16px;background:rgba(224,72,72,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;box-shadow:0 0 20px rgba(224,72,72,.2)}
+.admin-center h1{text-align:center;font-family:'Russo One';font-size:1.4rem;color:var(--accent)}
+.admin-center .sub{text-align:center;font-size:13px;color:var(--muted);margin-top:.5rem;margin-bottom:2rem}
+.form-box{border:1px solid var(--border);border-radius:12px;background:var(--card);padding:1.5rem}
+.form-group{margin-bottom:1.25rem}
+.form-group label{display:block;font-size:13px;color:var(--fg);margin-bottom:6px}
+.form-input{width:100%;padding:10px 12px 10px 38px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--fg);font-size:14px;outline:none;font-family:inherit}
+.form-input:focus{border-color:var(--primary)}
+.form-input-wrap{position:relative}
+.form-input-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+.divider{display:flex;align-items:center;gap:1rem;margin:1.25rem 0}
+.divider::before,.divider::after{content:'';flex:1;border-top:1px solid var(--border)}
+.divider span{font-size:12px;color:var(--muted)}
+.admin-footer{text-align:center;font-size:12px;color:var(--muted);margin-top:1.5rem}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 20px;font-size:14px;color:var(--fg);box-shadow:0 8px 32px rgba(0,0,0,.4);transform:translateY(120%);opacity:0;transition:all .3s;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .nav-link span{display:none}
+  .lucky-grid{grid-template-columns:1fr}
+  .hero h1{font-size:1.8rem}
+  th.hide-m,td.hide-m{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <div class="logo" onclick="navigate('news')">
+      <div class="logo-box">PT</div>
+      <div class="logo-text">PTCG HUB</div>
+    </div>
+    <div class="nav-links">
+      <div class="nav-link active" data-page="news" onclick="navigate('news')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>
+        <span>卡牌新聞</span>
+      </div>
+      <div class="nav-link" data-page="hot" onclick="navigate('hot')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>熱門炒價</span>
+      </div>
+      <div class="nav-link" data-page="lucky" onclick="navigate('lucky')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+        <span>抽福袋</span>
+      </div>
+      <div class="nav-link" data-page="buy" onclick="navigate('buy')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>買卡專區</span>
+      </div>
+      <div class="nav-link" data-page="admin" onclick="navigate('admin')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>管理後台</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE: NEWS -->
+<div id="page-news" class="page active">
+  <section class="hero">
+    <div>
+      <h1>PTCG 每日新聞</h1>
+      <p>最新寶可夢卡牌資訊一手掌握</p>
+    </div>
+  </section>
+  <div class="container">
+    <div class="grid-3" id="news-grid"></div>
+  </div>
+</div>
+
+<!-- PAGE: HOT -->
+<div id="page-hot" class="page">
+  <div class="container">
+    <h1 style="font-size:1.6rem;color:var(--accent);margin-bottom:.5rem">🔥 熱門卡片炒賣價格</h1>
+    <p style="color:var(--muted);margin-bottom:2rem">實時追蹤最熱門PTCG卡牌的市場價格走勢</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>卡牌</th><th class="hide-m">卡編號</th><th class="hide-m">稀有度</th><th class="right">價格 (HKD)</th><th class="right">漲跌</th>
+        </tr></thead>
+        <tbody id="hot-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: LUCKY -->
+<div id="page-lucky" class="page">
+  <div class="container">
+    <div class="lucky-center">
+      <div class="lucky-grid">
+        <div class="lucky-img-wrap">
+          <img class="lucky-img" src="https://images.pokemontcg.io/sv4/6_hires.png" alt="PTCG 福袋">
+        </div>
+        <div class="lucky-info">
+          <div class="lucky-badge">✨ 限量發售</div>
+          <h1>PTCG 超級福袋 2026</h1>
+          <p>每袋包含至少5張稀有卡牌，有機會抽中價值超過$50,000的噴火龍ex SAR！內含隨機補充包、閃卡、限定周邊，驚喜無限！</p>
+          <div class="info-box">
+            <div class="info-row">
+              <span class="info-label">價格</span>
+              <span class="info-value">HKD $888</span>
+            </div>
+            <div class="info-row" style="flex-direction:column;align-items:stretch">
+              <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                <span class="info-label">📦 剩餘數量</span>
+                <span id="remaining-text" style="color:var(--fg);font-weight:500">743 / 1000</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:25.7%"></div></div>
+              <div class="progress-text" id="sold-text">已售 25.7%</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="buy-lucky-btn" onclick="buyLucky()">🎁 立即購買</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: BUY -->
+<div id="page-buy" class="page">
+  <div class="container">
+    <h1 style="font-size:1.6rem;color:var(--accent);margin-bottom:.5rem">🛒 買寶可夢卡</h1>
+    <p style="color:var(--muted);margin-bottom:2rem">精選寶可夢卡牌，品質保證</p>
+    <div class="grid-4" id="buy-grid"></div>
+  </div>
+</div>
+
+<!-- PAGE: ADMIN -->
+<div id="page-admin" class="page">
+  <div class="container">
+    <div class="admin-center">
+      <div class="admin-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h1>管理員登入</h1>
+      <p class="sub">使用你的電郵登入管理後台</p>
+      <div class="form-box">
+        <div class="form-group">
+          <label>電郵地址</label>
+          <div class="form-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input class="form-input" type="email" placeholder="your@email.com">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>密碼</label>
+          <div class="form-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input class="form-input" type="password" placeholder="••••••••">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-bottom:0">登入</button>
+        <div class="divider"><span>或</span></div>
+        <button class="btn" style="width:100%;background:transparent;border:1px solid var(--border);color:var(--fg)">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          使用 Google 登入
+        </button>
+      </div>
+      <p class="admin-footer">只有獲授權的管理員才可存取後台功能</p>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// DATA
+var news=[
+  {id:"1",title:"《Prismatic Evolutions》補充包正式發售",summary:"最新擴充包帶來超過200張全新卡牌，包括多張閃卡伊布家族！",date:"2026-02-28",category:"新品發售",img:"https://images.pokemontcg.io/sv7/1_hires.png"},
+  {id:"2",title:"世界錦標賽2026年資格賽即將開始",summary:"各地區的積分賽即將展開，頂尖選手爭奪世界賽入場券。",date:"2026-02-27",category:"賽事",img:"https://images.pokemontcg.io/sv6/35_hires.png"},
+  {id:"3",title:"噴火龍ex SAR 價格突破歷史新高",summary:"稀有版本噴火龍在拍賣會上以驚人價格成交，收藏界震動。",date:"2026-02-26",category:"市場動態",img:"https://images.pokemontcg.io/sv4/6_hires.png"},
+  {id:"4",title:"新一期Ban List公佈 多張強力卡遭禁",summary:"官方宣布最新禁卡列表，多張環境統治級卡牌被限制使用。",date:"2026-02-25",category:"規則更新",img:"https://images.pokemontcg.io/sv5/25_hires.png"},
+  {id:"5",title:"寶可夢卡牌遊戲Pocket更新3.0版",summary:"手機版PTCG迎來重大更新，新增對戰模式和卡牌交換功能。",date:"2026-02-24",category:"電子遊戲",img:"https://images.pokemontcg.io/sv3/44_hires.png"},
+  {id:"6",title:"日本限定 寶可夢中心25周年特別套組",summary:"慶祝寶可夢中心成立25周年，推出限定豪華禮盒裝。",date:"2026-02-23",category:"限定商品",img:"https://images.pokemontcg.io/sv2/1_hires.png"},
+  {id:"7",title:"夢幻ex全新插畫版本曝光",summary:"知名繪師操刀的夢幻ex特別插畫版引發收藏熱潮。",date:"2026-02-22",category:"新卡情報",img:"https://images.pokemontcg.io/sv1/68_hires.png"},
+  {id:"8",title:"PTCG投資指南：2026年值得關注的卡牌",summary:"分析師推薦今年最具升值潛力的十張寶可夢卡牌。",date:"2026-02-21",category:"投資分析",img:"https://images.pokemontcg.io/sv3pt5/15_hires.png"},
+  {id:"9",title:"台北寶可夢卡牌大型交換會3月舉辦",summary:"亞洲最大規模卡牌交換活動即將在台北國際會議中心舉行。",date:"2026-02-20",category:"活動",img:"https://images.pokemontcg.io/sv4pt5/10_hires.png"},
+  {id:"10",title:"官方宣布新系列「Stellar Crown」詳情",summary:"下一個擴充系列主打傳說寶可夢，預計四月全球同步發售。",date:"2026-02-19",category:"新品預告",img:"https://images.pokemontcg.io/sv6pt5/20_hires.png"}
+];
+var hotCards=[
+  {name:"噴火龍 ex SAR",num:"SV4-006",price:28800,change:12.5,img:"https://images.pokemontcg.io/sv4/6_hires.png",rarity:"SAR"},
+  {name:"皮卡丘 ex UR",num:"SV3-044",price:15600,change:-3.2,img:"https://images.pokemontcg.io/sv3/44_hires.png",rarity:"UR"},
+  {name:"夢幻 ex SR",num:"SV1-068",price:9200,change:8.1,img:"https://images.pokemontcg.io/sv1/68_hires.png",rarity:"SR"},
+  {name:"路卡利歐 ex SAR",num:"SV5-025",price:7800,change:5.4,img:"https://images.pokemontcg.io/sv5/25_hires.png",rarity:"SAR"},
+  {name:"超夢 ex AR",num:"SV2-001",price:6500,change:-1.8,img:"https://images.pokemontcg.io/sv2/1_hires.png",rarity:"AR"},
+  {name:"固拉多 ex SR",num:"SV6-035",price:5200,change:15.3,img:"https://images.pokemontcg.io/sv6/35_hires.png",rarity:"SR"},
+  {name:"裂空座 ex UR",num:"SV3PT5-015",price:4800,change:2.7,img:"https://images.pokemontcg.io/sv3pt5/15_hires.png",rarity:"UR"},
+  {name:"仙子伊布 ex SAR",num:"SV4PT5-010",price:12400,change:22.1,img:"https://images.pokemontcg.io/sv4pt5/10_hires.png",rarity:"SAR"},
+  {name:"蓋歐卡 ex SR",num:"SV7-001",price:3900,change:-5.6,img:"https://images.pokemontcg.io/sv7/1_hires.png",rarity:"SR"},
+  {name:"阿爾宙斯 VSTAR UR",num:"SV6PT5-020",price:8900,change:6.8,img:"https://images.pokemontcg.io/sv6pt5/20_hires.png",rarity:"UR"}
+];
+var saleCards=[
+  {name:"噴火龍 VMAX",num:"S4-100",price:3200,cond:"Near Mint",img:"https://images.pokemontcg.io/sv4/6_hires.png",seller:"CardMaster"},
+  {name:"皮卡丘 V",num:"S3-025",price:800,cond:"Mint",img:"https://images.pokemontcg.io/sv3/44_hires.png",seller:"PokeCollector"},
+  {name:"水躍魚 ex",num:"SV1-020",price:450,cond:"Lightly Played",img:"https://images.pokemontcg.io/sv1/68_hires.png",seller:"TCGPro"},
+  {name:"妙蛙種子 AR",num:"SV2-015",price:1200,cond:"Mint",img:"https://images.pokemontcg.io/sv2/1_hires.png",seller:"GreenTrader"},
+  {name:"傑尼龜 ex SR",num:"SV5-008",price:2800,cond:"Near Mint",img:"https://images.pokemontcg.io/sv5/25_hires.png",seller:"BlueWave"},
+  {name:"伊布 SAR",num:"SV6-042",price:5600,cond:"Mint",img:"https://images.pokemontcg.io/sv6/35_hires.png",seller:"EeveeFan"},
+  {name:"超夢 GX",num:"SV3-030",price:1800,cond:"Excellent",img:"https://images.pokemontcg.io/sv3pt5/15_hires.png",seller:"PsychicMaster"},
+  {name:"卡比獸 V",num:"SV4-055",price:650,cond:"Near Mint",img:"https://images.pokemontcg.io/sv4pt5/10_hires.png",seller:"SleepyCards"},
+  {name:"暴鯉龍 ex UR",num:"SV7-012",price:4200,cond:"Mint",img:"https://images.pokemontcg.io/sv7/1_hires.png",seller:"DragonLord"},
+  {name:"甲賀忍蛙 ex",num:"SV6PT5-033",price:3500,cond:"Near Mint",img:"https://images.pokemontcg.io/sv6pt5/20_hires.png",seller:"NinjaTrader"}
+];
+
+// RENDER
+function renderNews(){
+  var h='';
+  news.forEach(function(n){
+    h+='<article class="news-card"><div class="img-wrap"><img src="'+n.img+'" alt="'+n.title+'" loading="lazy"></div><div class="body"><div class="meta"><span class="badge badge-primary">'+n.category+'</span><span class="date-text">📅 '+n.date+'</span></div><h2>'+n.title+'</h2><p>'+n.summary+'</p></div></article>';
+  });
+  document.getElementById('news-grid').innerHTML=h;
+}
+function renderHot(){
+  var h='';
+  hotCards.forEach(function(c){
+    var cls=c.change>=0?'change-up':'change-down';
+    var arrow=c.change>=0?'▲':'▼';
+    var sign=c.change>0?'+':'';
+    h+='<tr><td><div class="card-cell"><img src="'+c.img+'" alt="'+c.name+'"><div><div class="name">'+c.name+'</div><div class="sub hide-desktop">'+c.num+'</div></div></div></td><td class="mono hide-m">'+c.num+'</td><td class="hide-m"><span class="badge badge-accent">'+c.rarity+'</span></td><td class="right price-text">$'+c.price.toLocaleString()+'</td><td class="right"><span class="'+cls+'">'+arrow+' '+sign+c.change+'%</span></td></tr>';
+  });
+  document.getElementById('hot-tbody').innerHTML=h;
+}
+function renderBuy(){
+  var h='';
+  saleCards.forEach(function(c){
+    h+='<div class="sale-card"><div class="img-area"><img src="'+c.img+'" alt="'+c.name+'" loading="lazy"></div><div class="info"><div class="top-row"><span class="card-name">'+c.name+'</span><span class="badge badge-muted">'+c.cond+'</span></div><div class="card-num">'+c.num+'</div><div class="seller">賣家: '+c.seller+'</div><div class="bottom-row"><span class="price">$'+c.price.toLocaleString()+'</span><button class="btn btn-outline btn-sm" onclick="showToast(\'已將「'+c.name+'」加入購物車！\')">🛒 購買</button></div></div></div>';
+  });
+  document.getElementById('buy-grid').innerHTML=h;
+}
+
+// NAV
+function navigate(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.nav-link').forEach(function(l){l.classList.remove('active')});
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector('[data-page="'+page+'"]').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// LUCKY BAG
+var luckyRemaining=743;
+function buyLucky(){
+  if(luckyRemaining<=0)return;
+  var btn=document.getElementById('buy-lucky-btn');
+  btn.disabled=true;btn.textContent='處理中...';
+  setTimeout(function(){
+    luckyRemaining--;
+    var sold=((1000-luckyRemaining)/1000*100);
+    document.getElementById('remaining-text').textContent=luckyRemaining+' / 1000';
+    document.getElementById('progress-fill').style.width=sold.toFixed(1)+'%';
+    document.getElementById('sold-text').textContent='已售 '+sold.toFixed(1)+'%';
+    btn.disabled=false;btn.innerHTML='🎁 立即購買';
+    if(luckyRemaining<=0){btn.textContent='已售罄';btn.disabled=true;}
+    showToast('🎉 購買成功！你的福袋已加入訂單！');
+  },1500);
+}
+
+// TOAST
+var toastTimer;
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove('show')},3000);
+}
+
+// INIT
+renderNews();renderHot();renderBuy();
+</script>
+</body>
+</html>
